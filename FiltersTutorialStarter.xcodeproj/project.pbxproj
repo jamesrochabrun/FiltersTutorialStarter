@@ -406,6 +406,7 @@
 				7BFD77331EE5FD4000EE6CC2 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		7BFD77341EE5FD4000EE6CC2 /* Build configuration list for PBXNativeTarget "FiltersTutorialStarterTests" */ = {
 			isa = XCConfigurationList;
@@ -414,6 +415,7 @@
 				7BFD77361EE5FD4000EE6CC2 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 
