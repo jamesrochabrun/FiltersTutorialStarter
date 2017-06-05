@@ -10,6 +10,7 @@ import Foundation
 import UIKit
 import AVFoundation
 
+
 //MARK: Properties
 class CameraController: NSObject {
     
@@ -29,9 +30,9 @@ class CameraController: NSObject {
     var previewLayer: AVCaptureVideoPreviewLayer?
     //toggle flash default
     var flashMode = AVCaptureFlashMode.off
-    //capture photo completion
-    var photoCaptureCompletionBlock: ((UIImage?, Error?) -> Void)?
     
+    //Photocapturdelegate tracker
+    fileprivate var inProgressPhotoCaptureDelegates = [Int64 : PhotoCaptureDelegate]()
 }
 
 //MARK: Configuration
@@ -134,7 +135,7 @@ extension CameraController {
     }
 }
 
-//MARK: Main actions Camera
+//MARK: Toggle UI Cameras
 extension CameraController {
     
     //display "video preview" in view
@@ -204,10 +205,13 @@ extension CameraController {
         case .rear:
             try switchToFrontCamera()
         }
-        
         //8
         captureSession.commitConfiguration()
     }
+}
+
+//MARK: take photo actions
+extension CameraController {
     
     //Capture Image
     func captureImage(completion: @escaping (UIImage?, Error?) ->()) {
@@ -220,31 +224,17 @@ extension CameraController {
         let settings = AVCapturePhotoSettings()
         settings.flashMode = self.flashMode
         
-        self.photoOutput?.capturePhoto(with: settings, delegate: self)
-        self.photoCaptureCompletionBlock = completion
+        let photoCaptureDelegate = PhotoCaptureDelegate(with: settings, capturedPhoto: { (image) in
+            completion(image, nil)
+        }, completed: { (delegate) in
+            self.inProgressPhotoCaptureDelegates[delegate.requestedPhotoSettings.uniqueID] = nil
+        })
+        self.inProgressPhotoCaptureDelegates[photoCaptureDelegate.requestedPhotoSettings.uniqueID] = photoCaptureDelegate
+        self.photoOutput?.capturePhoto(with: settings, delegate: photoCaptureDelegate)
     }
+    
 }
 
-//MARK: Delegate methods
-extension CameraController: AVCapturePhotoCaptureDelegate {
-    
-    public func capture(_ captureOutput: AVCapturePhotoOutput, didFinishProcessingPhotoSampleBuffer photoSampleBuffer: CMSampleBuffer?, previewPhotoSampleBuffer: CMSampleBuffer?,
-                        resolvedSettings: AVCaptureResolvedPhotoSettings, bracketSettings: AVCaptureBracketedStillImageSettings?, error: Swift.Error?) {
-        
-        if let error = error {
-            
-            self.photoCaptureCompletionBlock?(nil, error)
-        } else if let buffer = photoSampleBuffer, let data = AVCapturePhotoOutput.jpegPhotoDataRepresentation(forJPEGSampleBuffer: buffer, previewPhotoSampleBuffer: nil),
-            let image = UIImage(data: data) {
-            
-            self.photoCaptureCompletionBlock?(image, nil)
-            
-        } else {
-            self.photoCaptureCompletionBlock?(nil, CameraControllerError.unknown)
-        }
-    }
-    
-}
 
 //MARK: Handling errors & checking states
 extension CameraController {
@@ -263,3 +253,57 @@ extension CameraController {
         case rear
     }
 }
+
+
+
+
+
+class PhotoCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
+    
+    private(set) var requestedPhotoSettings: AVCapturePhotoSettings
+    private let completed: (PhotoCaptureDelegate) -> ()
+    private let capturedPhoto: (UIImage) -> ()
+    
+    
+    init(with requestedPhotoSettings: AVCapturePhotoSettings,
+         capturedPhoto: @escaping (UIImage) -> (),
+         completed: @escaping (PhotoCaptureDelegate) -> ()) {
+        
+        self.requestedPhotoSettings = requestedPhotoSettings
+        self.completed = completed
+        self.capturedPhoto = capturedPhoto
+    }
+    
+    func capture(_ captureOutput: AVCapturePhotoOutput, didFinishProcessingPhotoSampleBuffer photoSampleBuffer: CMSampleBuffer?, previewPhotoSampleBuffer: CMSampleBuffer?, resolvedSettings: AVCaptureResolvedPhotoSettings, bracketSettings: AVCaptureBracketedStillImageSettings?, error: Error?) {
+        
+        if let error = error {
+            print(error)
+            
+        }
+        guard let buffer = photoSampleBuffer, let data = AVCapturePhotoOutput.jpegPhotoDataRepresentation(forJPEGSampleBuffer: buffer, previewPhotoSampleBuffer: nil),
+            let image = UIImage(data: data) else { return }
+        capturedPhoto(image)
+    }
+    
+    func capture(_ captureOutput: AVCapturePhotoOutput, didFinishCaptureForResolvedSettings resolvedSettings: AVCaptureResolvedPhotoSettings, error: Error?) {
+        completed(self)
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

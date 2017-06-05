@@ -20,7 +20,16 @@ class CameraVC: UIViewController {
         b.translatesAutoresizingMaskIntoConstraints = false
         b.layer.borderColor = UIColor.green.cgColor
         b.layer.borderWidth = 3.0
-        b.addTarget(self, action: #selector(captureImage), for: .touchUpInside)
+        b.addTarget(self, action: #selector(takePhoto), for: .touchUpInside)
+        return b
+    }()
+    
+    lazy var retakeButton: UIButton = {
+        let b = UIButton()
+        b.translatesAutoresizingMaskIntoConstraints = false
+        b.layer.borderColor = UIColor.red.cgColor
+        b.layer.borderWidth = 3.0
+        b.addTarget(self, action: #selector(retake), for: .touchUpInside)
         return b
     }()
     
@@ -47,15 +56,22 @@ class CameraVC: UIViewController {
         return b
     }()
     
+    //MARK: UI elements
+    let tempImageView: UIImageView = {
+        let iv = UIImageView(frame: UIScreen.main.bounds)
+        return iv
+    }()
     
     
     //MARK: UI setUp
     func setUpViews() {
         
         view.addSubview(capturePreviewView)
-        capturePreviewView.addSubview(captureButton)
-        capturePreviewView.addSubview(toggleFlashButton)
-        capturePreviewView.addSubview(toggleCameraButton)
+        view.addSubview(tempImageView)
+        view.addSubview(captureButton)
+        view.addSubview(toggleFlashButton)
+        view.addSubview(toggleCameraButton)
+        view.addSubview(retakeButton)
         
         NSLayoutConstraint.activate([
             
@@ -64,10 +80,20 @@ class CameraVC: UIViewController {
             capturePreviewView.heightAnchor.constraint(equalTo: view.heightAnchor),
             capturePreviewView.widthAnchor.constraint(equalTo: view.widthAnchor),
             
+            tempImageView.topAnchor.constraint(equalTo: view.topAnchor),
+            tempImageView.leftAnchor.constraint(equalTo: view.leftAnchor),
+            tempImageView.heightAnchor.constraint(equalTo: view.heightAnchor),
+            tempImageView.widthAnchor.constraint(equalTo: view.widthAnchor),
+            
             toggleFlashButton.heightAnchor.constraint(equalToConstant: 50),
             toggleFlashButton.widthAnchor.constraint(equalToConstant: 50),
             toggleFlashButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 30),
             toggleFlashButton.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -30),
+            
+            retakeButton.heightAnchor.constraint(equalTo: toggleFlashButton.heightAnchor),
+            retakeButton.widthAnchor.constraint(equalTo: toggleFlashButton.widthAnchor),
+            retakeButton.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 30),
+            retakeButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 30),
             
             toggleCameraButton.topAnchor.constraint(equalTo: toggleFlashButton.bottomAnchor, constant: 30),
             toggleCameraButton.heightAnchor.constraint(equalTo: toggleFlashButton.heightAnchor),
@@ -83,8 +109,6 @@ class CameraVC: UIViewController {
     
     //MARK: Camera
     let cameraController = CameraController()
-    
-    
 }
 
 //MARK: App lifecycle
@@ -100,7 +124,7 @@ extension CameraVC {
                 try? self.cameraController.displayPreview(on: self.capturePreviewView)
             }
         }
-        configureCameraController()
+        configureCameraController()        
     }
     
     override func viewWillLayoutSubviews() {
@@ -146,7 +170,7 @@ extension CameraVC {
 //MARK: Photos framework classes usage
 extension CameraVC {
     
-    func captureImage() {
+    func takePhoto() {
         
         cameraController.captureImage { (image, error) in
             
@@ -154,9 +178,44 @@ extension CameraVC {
                 print(error ?? "Image capture error")
                 return
             }
-            try? PHPhotoLibrary.shared().performChangesAndWait {
-                PHAssetChangeRequest.creationRequestForAsset(from: image)
-            }
+            self.tempImageView.image = image
+            self.tempImageView.isHidden = false
+            self.showAlertControllerAskingToKeep(image: image)
+            
         }
     }
+    
+    func retake() {
+        
+        tempImageView.isHidden = true
+        toggleCameraButton.isEnabled = true
+        toggleFlashButton.isEnabled = true
+        captureButton.isEnabled = true
+    }
+    
+    func showAlertControllerAskingToKeep(image: UIImage) {
+        
+        toggleFlashButton.isEnabled = false
+        toggleCameraButton.isEnabled = false
+        captureButton.isEnabled = false
+        
+        try? PHPhotoLibrary.shared().performChangesAndWait {
+            PHAssetChangeRequest.creationRequestForAsset(from: image)
+        }
+    }
+    
+ 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
