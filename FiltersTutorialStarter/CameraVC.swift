@@ -7,14 +7,17 @@
 //
 
 import UIKit
-import Photos
 
 //MARK: UI and properties
-class CameraVC: UIViewController {
+final class CameraVC: UIViewController {
     
-    //MARK: UI elements
     override var prefersStatusBarHidden: Bool { return true }
     
+    //MARK: resize image constant
+    static let capturedImageNewWidth: CGFloat = 450.0
+    fileprivate var isFrontCamera = false
+
+    //MARK: UI elements
     lazy var captureButton: UIButton = {
         let b = UIButton(type: .custom)
         b.translatesAutoresizingMaskIntoConstraints = false
@@ -23,12 +26,12 @@ class CameraVC: UIViewController {
         return b
     }()
     
-    lazy var retakeButton: UIButton = {
+    lazy var cancelButton: UIButton = {
         let b = UIButton(type: .custom)
         b.translatesAutoresizingMaskIntoConstraints = false
         b.setImage(#imageLiteral(resourceName: "dismiss"), for: .normal)
-        b.isHidden = true
-        b.addTarget(self, action: #selector(retake), for: .touchUpInside)
+        b.alpha = 0
+        b.addTarget(self, action: #selector(cancelPhoto), for: .touchUpInside)
         return b
     }()
     
@@ -61,22 +64,24 @@ class CameraVC: UIViewController {
         return b
     }()
     
-    //MARK: UI elements
-    let tempImageView: UIImageView = {
-        let iv = UIImageView(frame: UIScreen.main.bounds)
-        return iv
+    let filterView: FilterView = {
+        let fv = FilterView()
+        fv.isHidden = true
+        return fv
     }()
     
+    //MARK: CameraController
+    fileprivate let cameraController = CameraController()
     
     //MARK: UI setUp
     func setUpViews() {
         
         view.addSubview(capturePreviewView)
-        view.addSubview(tempImageView)
+        view.addSubview(filterView)
         view.addSubview(captureButton)
         view.addSubview(toggleFlashButton)
         view.addSubview(toggleCameraButton)
-        view.addSubview(retakeButton)
+        view.addSubview(cancelButton)
         
         NSLayoutConstraint.activate([
             
@@ -84,37 +89,34 @@ class CameraVC: UIViewController {
             capturePreviewView.leftAnchor.constraint(equalTo: view.leftAnchor),
             capturePreviewView.heightAnchor.constraint(equalTo: view.heightAnchor),
             capturePreviewView.widthAnchor.constraint(equalTo: view.widthAnchor),
-            
-            tempImageView.topAnchor.constraint(equalTo: view.topAnchor),
-            tempImageView.leftAnchor.constraint(equalTo: view.leftAnchor),
-            tempImageView.heightAnchor.constraint(equalTo: view.heightAnchor),
-            tempImageView.widthAnchor.constraint(equalTo: view.widthAnchor),
-            
-            captureButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -40),
-            captureButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            captureButton.heightAnchor.constraint(equalToConstant: 80),
-            captureButton.widthAnchor.constraint(equalToConstant: 80),
-            
-            retakeButton.heightAnchor.constraint(equalTo: toggleFlashButton.heightAnchor),
-            retakeButton.widthAnchor.constraint(equalTo: toggleFlashButton.widthAnchor),
-            retakeButton.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 30),
-            retakeButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 30),
+       
+            filterView.heightAnchor.constraint(equalTo: view.heightAnchor),
+            filterView.widthAnchor.constraint(equalTo: view.widthAnchor),
+            filterView.leftAnchor.constraint(equalTo: view.leftAnchor),
+            filterView.topAnchor.constraint(equalTo: view.topAnchor),
             
             toggleFlashButton.heightAnchor.constraint(equalToConstant: 60),
             toggleFlashButton.widthAnchor.constraint(equalToConstant: 60),
             toggleFlashButton.centerYAnchor.constraint(equalTo: captureButton.centerYAnchor),
             toggleFlashButton.rightAnchor.constraint(equalTo: captureButton.leftAnchor, constant: -30),
             
+            captureButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -40),
+            captureButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            captureButton.heightAnchor.constraint(equalToConstant: 80),
+            captureButton.widthAnchor.constraint(equalToConstant: 80),
+            
+            cancelButton.heightAnchor.constraint(equalTo: toggleFlashButton.heightAnchor),
+            cancelButton.widthAnchor.constraint(equalTo: toggleFlashButton.widthAnchor),
+            cancelButton.leftAnchor.constraint(equalTo: view.leftAnchor, constant: 30),
+            cancelButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 30),
+            
             toggleCameraButton.heightAnchor.constraint(equalTo: toggleFlashButton.heightAnchor),
             toggleCameraButton.widthAnchor.constraint(equalTo: toggleFlashButton.widthAnchor),
             toggleCameraButton.centerYAnchor.constraint(equalTo: captureButton.centerYAnchor),
-            toggleCameraButton.leftAnchor.constraint(equalTo: captureButton.rightAnchor, constant: 30)
-           
+            toggleCameraButton.leftAnchor.constraint(equalTo: captureButton.rightAnchor, constant: 30),
+
             ])
     }
-    
-    //MARK: Camera
-    let cameraController = CameraController()
 }
 
 //MARK: App lifecycle
@@ -141,22 +143,21 @@ extension CameraVC {
     }
 }
 
-//MARK: Photo action handlers
+//MARK: Photo action handlers Flash and rear/front camera
 extension CameraVC {
     
-    func toggleFlash() {
+    @objc fileprivate func toggleFlash() {
         
         if cameraController.flashMode == .on {
             cameraController.flashMode = .off
             toggleFlashButton.setImage(#imageLiteral(resourceName: "Flash Off Icon"), for: .normal)
         } else {
-            
             cameraController.flashMode = .on
             toggleFlashButton.setImage(#imageLiteral(resourceName: "Flash On Icon"), for: .normal)
         }
     }
     
-    func switchCameras() {
+    @objc fileprivate func switchCameras() {
         
         do {
             try cameraController.switchCameras()
@@ -167,18 +168,30 @@ extension CameraVC {
         switch cameraController.currentCameraPosition {
         case .some(.front):
             toggleCameraButton.setImage(#imageLiteral(resourceName: "Front Camera Icon"), for: .normal)
+            isFrontCamera = true
+            toggleFlashButton.isEnabled = false
         case .some(.rear):
             toggleCameraButton.setImage(#imageLiteral(resourceName: "Rear Camera Icon"), for: .normal)
+            isFrontCamera = false
+            toggleFlashButton.isEnabled = true
         case .none:
             return
         }
     }
 }
 
+
+
+
+
+
+
+
+
 //MARK: Photos framework classes usage
 extension CameraVC {
     
-    func takePhoto() {
+    @objc fileprivate func takePhoto() {
         
         cameraController.captureImage { (image, error) in
             
@@ -186,39 +199,89 @@ extension CameraVC {
                 print(error ?? "Image capture error")
                 return
             }
-            //Do something with the image like filter it
-            //this is teh input
-            self.tempImageView.image = image
-     
-            self.showAlertControllerAskingToKeep(image: image)
+        
+            //MARK: Camera
+            let oldSize = image.size
+            let newSize = CGSize(width: CameraVC.capturedImageNewWidth, height: CameraVC.capturedImageNewWidth * oldSize.height / oldSize.width)
+            let scaledImage = UIImage.getImageScaledTo(newSize: newSize, from: image)
+            self.handleCapturedImage(scaledImage)
         }
     }
     
-    func retake() {
-        
-        tempImageView.isHidden = true
-        retakeButton.isHidden = true
-        toggleCameraButton.isHidden = false
-        toggleFlashButton.isHidden = false
-        captureButton.isHidden = false
-        tempImageView.image = nil
-    }
+    @objc fileprivate func cancelPhoto() {
     
-    func showAlertControllerAskingToKeep(image: UIImage) {
-        
-        tempImageView.isHidden = false
-        retakeButton.isHidden = false
-        toggleFlashButton.isHidden = true
-        toggleCameraButton.isHidden = true
-        captureButton.isHidden = true
-        
-        try? PHPhotoLibrary.shared().performChangesAndWait {
-            PHAssetChangeRequest.creationRequestForAsset(from: image)
+        self.filterView.inputImage = nil
+        self.filterView.isHidden = true
+
+        UIView.animate(withDuration: 0.5) {
+            self.cancelButton.alpha = 0
+            self.toggleFlashButton.alpha = 1.0
+            self.toggleCameraButton.alpha = 1.0
+            self.captureButton.alpha = 1.0
         }
     }
     
+    fileprivate func handleCapturedImage(_ image: UIImage) {
+        
+        self.filterView.inputImage = image
+        self.filterView.isHidden = false
+
+        UIView.animate(withDuration: 0.5) {
+            self.cancelButton.alpha = 1.0
+            self.toggleFlashButton.alpha = 0
+            self.toggleCameraButton.alpha = 0
+            self.captureButton.alpha = 0
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+protocol Scalable {}
+
+extension Scalable where Self: UIImage {
+    
+    func scaleTo(newSize: CGSize) -> UIImage {
+        
+        let horizontalRatio = newSize.width / size.width
+        let verticalRatio = newSize.height / size.height
+        
+        let ratio = max(horizontalRatio, verticalRatio)
+        let newSize = CGSize(width: size.width * ratio, height: size.height * ratio)
+        UIGraphicsBeginImageContextWithOptions(newSize, true, 0)
+        draw(in: CGRect(origin: CGPoint(x: 0, y: 0), size: newSize))
+        let newImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        return newImage!
+    }
+    
+    static func getImageScaledTo(newSize: CGSize, from image: UIImage) -> UIImage {
+        
+        UIGraphicsBeginImageContextWithOptions(newSize, false, 0.0)
+        image.draw(in: CGRect(x: 0, y: 0, width: newSize.width, height: newSize.height))
+        let newImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        return newImage!
+    }
  
 }
+
+extension UIImage: Scalable {}
+
+
+
 
 
 
