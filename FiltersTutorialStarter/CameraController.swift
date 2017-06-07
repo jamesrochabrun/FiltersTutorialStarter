@@ -15,19 +15,19 @@ import AVFoundation
 final class CameraController: NSObject {
     
     //session
-    var captureSession: AVCaptureSession?
+    fileprivate var captureSession: AVCaptureSession?
     //device
-    var frontCamera: AVCaptureDevice?
-    var rearCamera: AVCaptureDevice?
+    fileprivate var frontCamera: AVCaptureDevice?
+    fileprivate var rearCamera: AVCaptureDevice?
     //inputs
     var currentCameraPosition: CameraPosition?
-    var frontCameraInput: AVCaptureDeviceInput?
-    var rearCameraInput: AVCaptureDeviceInput?
+    fileprivate var frontCameraInput: AVCaptureDeviceInput?
+    fileprivate var rearCameraInput: AVCaptureDeviceInput?
     //output
-    var photoOutput: AVCapturePhotoOutput?
+    fileprivate var photoOutput: AVCapturePhotoOutput?
     
     //preview layer
-    var previewLayer: AVCaptureVideoPreviewLayer?
+    fileprivate var previewLayer: AVCaptureVideoPreviewLayer?
     //toggle flash default
     var flashMode = AVCaptureFlashMode.off
     

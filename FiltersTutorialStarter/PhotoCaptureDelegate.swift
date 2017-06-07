@@ -43,7 +43,6 @@ class PhotoCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
                 print("Error on captureOutput")
                 return
         }
-        
         capturedPhoto(cgImageRef)
     }
     

@@ -14,7 +14,9 @@ final class CameraVC: UIViewController {
     override var prefersStatusBarHidden: Bool { return true }
     
     //MARK: resize image constant
-    static let capturedImageNewWidth: CGFloat = 450.0
+    var capturedImageNewWidth: CGFloat {
+        return 450
+    }
     fileprivate var isFrontCamera = false
 
     //MARK: UI elements
@@ -64,9 +66,10 @@ final class CameraVC: UIViewController {
         return b
     }()
     
-    let filterView: FilterView = {
+    lazy var filterView: FilterView = {
         let fv = FilterView()
         fv.isHidden = true
+        fv.delegate = self
         return fv
     }()
     
@@ -83,6 +86,7 @@ final class CameraVC: UIViewController {
         view.addSubview(toggleCameraButton)
         view.addSubview(cancelButton)
         
+        print("size", self.view.frame.size)
         NSLayoutConstraint.activate([
             
             capturePreviewView.topAnchor.constraint(equalTo: view.topAnchor),
@@ -203,11 +207,10 @@ extension CameraVC {
             let orientation: UIImageOrientation = self.isFrontCamera ? .leftMirrored : .right
             let image = UIImage(cgImage: cgImage, scale: 0.1, orientation: orientation)
             self.handleCapturedImage(image)
-            
         
             //MARK: Camera
             let oldSize = image.size
-            let newSize = CGSize(width: CameraVC.capturedImageNewWidth, height: CameraVC.capturedImageNewWidth * oldSize.height / oldSize.width)
+            let newSize = CGSize(width: self.capturedImageNewWidth, height: self.capturedImageNewWidth * oldSize.height / oldSize.width)
             let scaledImage = UIImage.getImageScaledTo(newSize: newSize, from: image)
            self.handleCapturedImage(scaledImage)
         }
@@ -240,6 +243,20 @@ extension CameraVC {
     }
 }
 
+extension CameraVC: FilterViewDelegate {
+    
+    func performUpdateAfterImageSaved() {
+        
+        let alertController = UIAlertController(title: "Saved!", message: "Image Succesfully saved in your Camera roll", preferredStyle: .alert)
+        let okAction = UIAlertAction(title: "Ok", style: .cancel) { (action) in
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2, execute: {
+                self.cancelPhoto()
+            })
+        }
+        alertController.addAction(okAction)
+        self.present(alertController, animated: true)
+    }
+}
 
 
 
@@ -257,20 +274,6 @@ extension CameraVC {
 protocol Scalable {}
 
 extension Scalable where Self: UIImage {
-    
-    func scaleTo(newSize: CGSize) -> UIImage {
-        
-        let horizontalRatio = newSize.width / size.width
-        let verticalRatio = newSize.height / size.height
-        
-        let ratio = max(horizontalRatio, verticalRatio)
-        let newSize = CGSize(width: size.width * ratio, height: size.height * ratio)
-        UIGraphicsBeginImageContextWithOptions(newSize, true, 0)
-        draw(in: CGRect(origin: CGPoint(x: 0, y: 0), size: newSize))
-        let newImage = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
-        return newImage!
-    }
     
     static func getImageScaledTo(newSize: CGSize, from image: UIImage) -> UIImage {
         

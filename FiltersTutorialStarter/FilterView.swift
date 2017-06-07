@@ -10,9 +10,14 @@ import Foundation
 import UIKit
 import Photos
 
+protocol FilterViewDelegate: class {
+    func performUpdateAfterImageSaved()
+}
+
 class FilterView: UIView {
     
     static let reuseIdentifier = "FilterCell"
+    weak var delegate: FilterViewDelegate?
     
     var inputImage: UIImage?  {
         didSet {
@@ -34,7 +39,7 @@ class FilterView: UIView {
             }
         }
     }
-    
+
     let context: CIContext = {
         let openGLContext = EAGLContext(api: .openGLES3)
         let context = CIContext(eaglContext: openGLContext!)
@@ -44,12 +49,9 @@ class FilterView: UIView {
     lazy var filtersCollectionView: UICollectionView = {
         let layout = ListLayout()
         let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        cv.backgroundColor = .clear
         cv.translatesAutoresizingMaskIntoConstraints = false
         cv.dataSource = self
-        cv.alwaysBounceHorizontal = true
         cv.register(FilterCell.self, forCellWithReuseIdentifier: FilterView.reuseIdentifier)
-        cv.delegate = self
         cv.isPagingEnabled = true
         cv.showsHorizontalScrollIndicator = false
         return cv
@@ -60,7 +62,6 @@ class FilterView: UIView {
         b.tintColor = .white
         b.translatesAutoresizingMaskIntoConstraints = false
         b.setImage(#imageLiteral(resourceName: "save"), for: .normal)
-       // b.alpha = 0
         b.addTarget(self, action: #selector(saveImageInLibrary), for: .touchUpInside)
         return b
     }()
@@ -95,16 +96,21 @@ class FilterView: UIView {
     
     func saveImageInLibrary() {
         
-//        try? PHPhotoLibrary.shared().performChangesAndWait {
-//            PHAssetChangeRequest.creationRequestForAsset(from: image)
-//        }
-    }
-}
-
-extension FilterView: UICollectionViewDelegate {
-    
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        print("\(indexPath.item)")
+        let visibleRect = CGRect(origin: self.filtersCollectionView.contentOffset, size: self.filtersCollectionView.bounds.size)
+        let visiblePoint = CGPoint(x: visibleRect.midX, y: visibleRect.midY)
+        
+        if let visibleIndexpath = self.filtersCollectionView.indexPathForItem(at: visiblePoint),
+            let filterCell = self.filtersCollectionView.cellForItem(at: visibleIndexpath) as? FilterCell,
+            let image = filterCell.photoImageView.image {
+            
+            print("v I: \(visibleIndexpath.item)")
+            try? PHPhotoLibrary.shared().performChangesAndWait { [weak self]  in
+                
+                guard let strongSelf = self else { return }
+                PHAssetChangeRequest.creationRequestForAsset(from: image)
+                strongSelf.delegate?.performUpdateAfterImageSaved()
+            }
+        }
     }
 }
 
