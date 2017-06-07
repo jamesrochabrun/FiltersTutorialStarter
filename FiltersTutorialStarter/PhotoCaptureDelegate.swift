@@ -15,11 +15,11 @@ class PhotoCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
     
     private(set) var requestedPhotoSettings: AVCapturePhotoSettings
     private let completed: (PhotoCaptureDelegate) -> ()
-    private let capturedPhoto: (UIImage) -> ()
+    private let capturedPhoto: (CGImage) -> ()
     
     
     init(with requestedPhotoSettings: AVCapturePhotoSettings,
-         capturedPhoto: @escaping (UIImage) -> (),
+         capturedPhoto: @escaping (CGImage) -> (),
          completed: @escaping (PhotoCaptureDelegate) -> ()) {
         
         self.requestedPhotoSettings = requestedPhotoSettings
@@ -33,16 +33,36 @@ class PhotoCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
             print(error)
             
         }
-        guard let buffer = photoSampleBuffer, let data = AVCapturePhotoOutput.jpegPhotoDataRepresentation(forJPEGSampleBuffer: buffer, previewPhotoSampleBuffer: nil),
-            let image = UIImage(data: data) else { return }
+//        guard let buffer = photoSampleBuffer, let data = AVCapturePhotoOutput.jpegPhotoDataRepresentation(forJPEGSampleBuffer: buffer, previewPhotoSampleBuffer: nil),
+//            let image = UIImage(data: data) else { return }
         
-        capturedPhoto(image)
+        guard let sampleBuffer = photoSampleBuffer,
+            let dataImage = AVCapturePhotoOutput.jpegPhotoDataRepresentation(forJPEGSampleBuffer: sampleBuffer, previewPhotoSampleBuffer: nil),
+            let dataProvider = CGDataProvider(data: dataImage as CFData),
+            let cgImageRef = CGImage.init(jpegDataProviderSource: dataProvider, decode: nil, shouldInterpolate: true, intent: CGColorRenderingIntent.defaultIntent) else {
+                print("Error on captureOutput")
+                return
+        }
+        
+        capturedPhoto(cgImageRef)
     }
     
     func capture(_ captureOutput: AVCapturePhotoOutput, didFinishCaptureForResolvedSettings resolvedSettings: AVCaptureResolvedPhotoSettings, error: Error?) {
         completed(self)
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

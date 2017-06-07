@@ -214,7 +214,7 @@ extension CameraController {
 extension CameraController {
     
     //Capture Image
-    func captureImage(completion: @escaping (UIImage?, Error?) ->()) {
+    func captureImage(completion: @escaping (CGImage?, Error?) ->()) {
         
         guard let captureSession = captureSession, captureSession.isRunning else {
             completion(nil, CameraControllerError.captureSessionIsMissing)

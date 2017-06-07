@@ -192,19 +192,24 @@ extension CameraVC {
 extension CameraVC {
     
     @objc fileprivate func takePhoto() {
-        
-        cameraController.captureImage { (image, error) in
+    
+        cameraController.captureImage { (cgImage, error) in
             
-            guard let image = image else {
+            guard let cgImage = cgImage else {
                 print(error ?? "Image capture error")
                 return
             }
+            
+            let orientation: UIImageOrientation = self.isFrontCamera ? .leftMirrored : .right
+            let image = UIImage(cgImage: cgImage, scale: 0.1, orientation: orientation)
+            self.handleCapturedImage(image)
+            
         
             //MARK: Camera
             let oldSize = image.size
             let newSize = CGSize(width: CameraVC.capturedImageNewWidth, height: CameraVC.capturedImageNewWidth * oldSize.height / oldSize.width)
             let scaledImage = UIImage.getImageScaledTo(newSize: newSize, from: image)
-            self.handleCapturedImage(scaledImage)
+           self.handleCapturedImage(scaledImage)
         }
     }
     
