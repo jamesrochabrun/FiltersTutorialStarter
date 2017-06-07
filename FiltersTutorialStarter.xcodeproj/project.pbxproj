@@ -12,6 +12,7 @@
 		7B87DA0E1EE76F4400F29526 /* Filters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B87DA0D1EE76F4400F29526 /* Filters.swift */; };
 		7B87DA101EE76F5F00F29526 /* FilterCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B87DA0F1EE76F5F00F29526 /* FilterCell.swift */; };
 		7B87DA121EE76F8200F29526 /* FilterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B87DA111EE76F8200F29526 /* FilterView.swift */; };
+		7BD8808B1EE8695200B14E99 /* Scalable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BD8808A1EE8695200B14E99 /* Scalable.swift */; };
 		7BFD77151EE5FD4000EE6CC2 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BFD77141EE5FD4000EE6CC2 /* AppDelegate.swift */; };
 		7BFD77171EE5FD4000EE6CC2 /* CameraVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BFD77161EE5FD4000EE6CC2 /* CameraVC.swift */; };
 		7BFD771D1EE5FD4000EE6CC2 /* FiltersTutorialStarter.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 7BFD771B1EE5FD4000EE6CC2 /* FiltersTutorialStarter.xcdatamodeld */; };
@@ -37,6 +38,7 @@
 		7B87DA0D1EE76F4400F29526 /* Filters.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Filters.swift; sourceTree = "<group>"; };
 		7B87DA0F1EE76F5F00F29526 /* FilterCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FilterCell.swift; sourceTree = "<group>"; };
 		7B87DA111EE76F8200F29526 /* FilterView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FilterView.swift; sourceTree = "<group>"; };
+		7BD8808A1EE8695200B14E99 /* Scalable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Scalable.swift; sourceTree = "<group>"; };
 		7BFD77111EE5FD4000EE6CC2 /* FiltersTutorialStarter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FiltersTutorialStarter.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7BFD77141EE5FD4000EE6CC2 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = FiltersTutorialStarter/AppDelegate.swift; sourceTree = "<group>"; };
 		7BFD77161EE5FD4000EE6CC2 /* CameraVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraVC.swift; sourceTree = "<group>"; };
@@ -68,6 +70,42 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		7BD880861EE868FD00B14E99 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				7B87DA0B1EE73B4E00F29526 /* PhotoCaptureDelegate.swift */,
+				7BFD77371EE5FDCC00EE6CC2 /* CameraController.swift */,
+				7B87DA0D1EE76F4400F29526 /* Filters.swift */,
+			);
+			name = Model;
+			sourceTree = "<group>";
+		};
+		7BD880871EE8690500B14E99 /* View */ = {
+			isa = PBXGroup;
+			children = (
+				7B87DA031EE7163B00F29526 /* ListLayout.swift */,
+				7B87DA0F1EE76F5F00F29526 /* FilterCell.swift */,
+				7B87DA111EE76F8200F29526 /* FilterView.swift */,
+			);
+			name = View;
+			sourceTree = "<group>";
+		};
+		7BD880881EE8690B00B14E99 /* Controller */ = {
+			isa = PBXGroup;
+			children = (
+				7BFD77161EE5FD4000EE6CC2 /* CameraVC.swift */,
+			);
+			name = Controller;
+			sourceTree = "<group>";
+		};
+		7BD880891EE8691200B14E99 /* Protocols */ = {
+			isa = PBXGroup;
+			children = (
+				7BD8808A1EE8695200B14E99 /* Scalable.swift */,
+			);
+			name = Protocols;
+			sourceTree = "<group>";
+		};
 		7BFD77081EE5FD4000EE6CC2 = {
 			isa = PBXGroup;
 			children = (
@@ -90,13 +128,10 @@
 		7BFD77131EE5FD4000EE6CC2 /* FiltersTutorialStarter */ = {
 			isa = PBXGroup;
 			children = (
-				7BFD77371EE5FDCC00EE6CC2 /* CameraController.swift */,
-				7BFD77161EE5FD4000EE6CC2 /* CameraVC.swift */,
-				7B87DA0B1EE73B4E00F29526 /* PhotoCaptureDelegate.swift */,
-				7B87DA031EE7163B00F29526 /* ListLayout.swift */,
-				7B87DA0D1EE76F4400F29526 /* Filters.swift */,
-				7B87DA0F1EE76F5F00F29526 /* FilterCell.swift */,
-				7B87DA111EE76F8200F29526 /* FilterView.swift */,
+				7BD880891EE8691200B14E99 /* Protocols */,
+				7BD880881EE8690B00B14E99 /* Controller */,
+				7BD880871EE8690500B14E99 /* View */,
+				7BD880861EE868FD00B14E99 /* Model */,
 				7BFD771E1EE5FD4000EE6CC2 /* Assets.xcassets */,
 				7BFD77201EE5FD4000EE6CC2 /* LaunchScreen.storyboard */,
 				7BFD77231EE5FD4000EE6CC2 /* Info.plist */,
@@ -220,6 +255,7 @@
 			files = (
 				7B87DA0E1EE76F4400F29526 /* Filters.swift in Sources */,
 				7B87DA101EE76F5F00F29526 /* FilterCell.swift in Sources */,
+				7BD8808B1EE8695200B14E99 /* Scalable.swift in Sources */,
 				7B87DA0C1EE73B4E00F29526 /* PhotoCaptureDelegate.swift in Sources */,
 				7BFD771D1EE5FD4000EE6CC2 /* FiltersTutorialStarter.xcdatamodeld in Sources */,
 				7B87DA121EE76F8200F29526 /* FilterView.swift in Sources */,

@@ -7,6 +7,13 @@
 //
 
 import UIKit
+import AVFoundation
+
+
+struct CameraStateTracker {
+    var isFront: Bool
+    var isFlashOn: Bool
+}
 
 //MARK: UI and properties
 final class CameraVC: UIViewController {
@@ -17,7 +24,7 @@ final class CameraVC: UIViewController {
     var capturedImageNewWidth: CGFloat {
         return 450
     }
-    fileprivate var isFrontCamera = false
+    var cameraStateTracker = CameraStateTracker(isFront: false, isFlashOn: false)
 
     //MARK: UI elements
     lazy var captureButton: UIButton = {
@@ -152,12 +159,26 @@ extension CameraVC {
     
     @objc fileprivate func toggleFlash() {
         
-        if cameraController.flashMode == .on {
+        if cameraStateTracker.isFlashOn {
             cameraController.flashMode = .off
             toggleFlashButton.setImage(#imageLiteral(resourceName: "Flash Off Icon"), for: .normal)
+            cameraStateTracker.isFlashOn = false
+           
         } else {
             cameraController.flashMode = .on
             toggleFlashButton.setImage(#imageLiteral(resourceName: "Flash On Icon"), for: .normal)
+            cameraStateTracker.isFlashOn = true
+        }
+    }
+    
+    private func updateFlashStateForFrontDevice() {
+        
+        if cameraStateTracker.isFlashOn && cameraStateTracker.isFront {
+            cameraStateTracker.isFlashOn = false
+            cameraController.flashMode = .off
+            
+        } else {
+            cameraStateTracker.isFlashOn = true
         }
     }
     
@@ -172,27 +193,23 @@ extension CameraVC {
         switch cameraController.currentCameraPosition {
         case .some(.front):
             toggleCameraButton.setImage(#imageLiteral(resourceName: "Front Camera Icon"), for: .normal)
-            isFrontCamera = true
+            cameraStateTracker.isFront = true
             toggleFlashButton.isEnabled = false
+            updateFlashStateForFrontDevice()
+            
         case .some(.rear):
             toggleCameraButton.setImage(#imageLiteral(resourceName: "Rear Camera Icon"), for: .normal)
-            isFrontCamera = false
+            cameraStateTracker.isFront = false
             toggleFlashButton.isEnabled = true
+            toggleFlash()
+
         case .none:
             return
         }
     }
 }
 
-
-
-
-
-
-
-
-
-//MARK: Photos framework classes usage
+//MARK: cpature photo handlers
 extension CameraVC {
     
     @objc fileprivate func takePhoto() {
@@ -204,15 +221,12 @@ extension CameraVC {
                 return
             }
             
-            let orientation: UIImageOrientation = self.isFrontCamera ? .leftMirrored : .right
+            let orientation: UIImageOrientation = self.cameraStateTracker.isFront ? .leftMirrored : .right
             let image = UIImage(cgImage: cgImage, scale: 0.1, orientation: orientation)
-            self.handleCapturedImage(image)
-        
-            //MARK: Camera
             let oldSize = image.size
             let newSize = CGSize(width: self.capturedImageNewWidth, height: self.capturedImageNewWidth * oldSize.height / oldSize.width)
             let scaledImage = UIImage.getImageScaledTo(newSize: newSize, from: image)
-           self.handleCapturedImage(scaledImage)
+            self.handleCapturedImage(scaledImage)
         }
     }
     
@@ -243,6 +257,7 @@ extension CameraVC {
     }
 }
 
+//MARK: FilterviewDelegate method trigered after image saved
 extension CameraVC: FilterViewDelegate {
     
     func performUpdateAfterImageSaved() {
@@ -270,23 +285,6 @@ extension CameraVC: FilterViewDelegate {
 
 
 
-
-protocol Scalable {}
-
-extension Scalable where Self: UIImage {
-    
-    static func getImageScaledTo(newSize: CGSize, from image: UIImage) -> UIImage {
-        
-        UIGraphicsBeginImageContextWithOptions(newSize, false, 0.0)
-        image.draw(in: CGRect(x: 0, y: 0, width: newSize.width, height: newSize.height))
-        let newImage = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
-        return newImage!
-    }
- 
-}
-
-extension UIImage: Scalable {}
 
 
 

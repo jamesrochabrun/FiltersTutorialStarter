@@ -223,7 +223,7 @@ extension CameraController {
         
         let settings = AVCapturePhotoSettings()
         settings.flashMode = self.flashMode
-        
+
         let photoCaptureDelegate = PhotoCaptureDelegate(with: settings, capturedPhoto: { (image) in
             completion(image, nil)
         }, completed: { (delegate) in

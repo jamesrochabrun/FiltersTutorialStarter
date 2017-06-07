@@ -33,8 +33,6 @@ class PhotoCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
             print(error)
             
         }
-//        guard let buffer = photoSampleBuffer, let data = AVCapturePhotoOutput.jpegPhotoDataRepresentation(forJPEGSampleBuffer: buffer, previewPhotoSampleBuffer: nil),
-//            let image = UIImage(data: data) else { return }
         
         guard let sampleBuffer = photoSampleBuffer,
             let dataImage = AVCapturePhotoOutput.jpegPhotoDataRepresentation(forJPEGSampleBuffer: sampleBuffer, previewPhotoSampleBuffer: nil),
